@@ -8,8 +8,9 @@ Extract NIMH Data Archive compatible metadata from Brain Imaging Data Structure 
 
 
 ## Usage
+<!-- python3 -m bids2nda.main -h -->
 
-    usage: bids2nda [-h] [-v] BIDS_DIRECTORY GUID_MAPPING OUTPUT_DIRECTORY
+    usage: bids2nda [-h] [--experimentid_tsv EXPERIMENTID_TSV] BIDS_DIRECTORY GUID_MAPPING OUTPUT_DIRECTORY
 
     BIDS to NDA converter.
 
@@ -23,7 +24,8 @@ Extract NIMH Data Archive compatible metadata from Brain Imaging Data Structure 
 
     optional arguments:
       -h, --help        Show this help message and exit.
-
+      --experimentid_tsv EXPERIMENTID_TSV
+                        Path to TSV file w/cols ExperimentID and Pattern for NDA EID lookup
 
 ## GUID_MAPPING file format
 The is the file format produced by the GUID Tool, one line per subject in the format:
