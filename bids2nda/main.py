@@ -50,7 +50,8 @@ def read_participant_info(bids_directory: os.PathLike) -> pd.DataFrame:
 
 
 def read_scan_date(scans_file: str, file: str) -> str:
-    """Extract acq_time from scan_file where filename=file"""
+    """Extract acq_time from scan_file.
+    Find row where filename column value matches ``file``"""
     if not os.path.exists(scans_file):
         print("%s file not found - information about scan date required by NDA could not be found. Alternatively, information could be stored in sessions.tsv" % scans_file)
         sys.exit(-1)
@@ -166,7 +167,7 @@ def cosine_to_orientation(iop):
         )
 
 
-def run(args):
+def run(args) -> pd.DataFrame:
 
     guid_mapping = dict([line.split(" - ") for line in open(args.guid_mapping).read().split("\n") if line != ''])
 
@@ -216,28 +217,33 @@ def run(args):
         dict_append(image03_dict, 'src_subject_id', bids_subject_id)
 
         sub = file.split("sub-")[-1].split("_")[0]
-        sdate = None  # initialization. set by sessions.tsv or _scans.tsv
+        date = None  # initialization. set by sessions.tsv or _scans.tsv
         if "ses-" in file:
             ses = file.split("ses-")[-1].split("_")[0]
             scans_file = (os.path.join(args.bids_directory, "sub-" + sub, "ses-" + ses, "sub-" + sub + "_ses-" + ses + "_scans.tsv"))
 
             this_subj = participants_df[participants_df.participant_id == "sub-" + sub]
-            this_subj = this_subj[this_subj.session_id == ses]
+            this_subj = this_subj[this_subj.session_id == 'ses-' + ses]
             if this_subj.shape[0] == 0:
-                raise Exception(f"{args.bids_directory}/sub-{sub}/sessions.tsv must have row with session_id = {ses}")
+                raise Exception(f"{args.bids_directory}/sub-{sub}/sub-{ses}_sessions.tsv must have row with session_id = ses-{ses}")
             if 'acq_time' in this_subj.columns:
-                sdate = this_subj.acq_time[0]
+                date = this_subj.acq_time.tolist()[0]
         else:
+            ses = None
             scans_file = (os.path.join(args.bids_directory, "sub-" + sub, "sub-" + sub + "_scans.tsv"))
 
             this_subj = participants_df[participants_df.participant_id == "sub-" + sub]
             if this_subj.shape[0] == 0:
                 raise Exception(f"{args.bids_directory}/participants.tsv must have row with participant_id = 'sub-{sub}'")
 
+        # TODO: should be fatal error?
+        if this_subj.shape[0] != 1:
+            print(f"WARNING: {this_subj.shape[0]} matching rows for sub-{sub} (ses={ses}). Check participants.tsv and sessions.tsv for duplicates")
+
         # only already defined if in sessions.tsv
         # if we have the file, allow it to overwrite sessions.tsv
         # e.g. maybe collected mprage on different day from rest
-        if not sdate or os.path.isfile(scans_file):
+        if not date or os.path.isfile(scans_file):
             date = read_scan_date(scans_file, file)
 
         sdate = date.split("-")
@@ -441,21 +447,23 @@ def run(args):
 
     image03_df = pd.DataFrame(image03_dict)
 
-    with open(os.path.join(args.output_directory, "image03.txt"), "w") as out_fp:
-        out_fp.write('"image"\t"3"\n')
-        image03_df.to_csv(out_fp, sep="\t", index=False, quoting=csv.QUOTE_ALL)
+    return image03_df
 
-def main():
-    class MyParser(argparse.ArgumentParser):
-        def error(self, message):
-            sys.stderr.write('error: %s\n' % message)
-            self.print_help()
-            sys.exit(2)
 
+class MyParser(argparse.ArgumentParser):
+    def error(self, message):
+        sys.stderr.write('error: %s\n' % message)
+        self.print_help()
+        sys.exit(2)
+
+
+def parse_args(argv:list[str]|None=None):
+    """
+    argv None to read from sys.argv
+    """
     parser = MyParser(
         description="BIDS to NDA converter.",
         fromfile_prefix_chars='@')
-    # TODO Specify your real parameters here.
     parser.add_argument(
         "bids_directory",
         help="Location of the root of your BIDS compatible directory",
@@ -469,9 +477,18 @@ def main():
         "output_directory",
         help="Directory where NDA files will be stored",
         metavar="OUTPUT_DIRECTORY")
-    args = parser.parse_args()
+    return parser.parse_args(argv)
 
-    run(args)
+
+def main():
+
+    args = parse_args()
+    image03_df = run(args)
+
+    with open(os.path.join(args.output_directory, "image03.txt"), "w") as out_fp:
+        out_fp.write('"image"\t"3"\n')
+        image03_df.to_csv(out_fp, sep="\t", index=False, quoting=csv.QUOTE_ALL)
+
     print("Metadata extraction complete.")
 
 
