@@ -84,7 +84,7 @@ def test_full(tmpdir):
 
     # check output
     # expect task-rest to have exp id 123
-    df = pd.read_csv(tmpdir.join("out/image03.txt"), skiprows=1, sep="\t")
+    df = pd.read_csv(tmpdir.join("out/image03.txt"), skiprows=1, sep=",")
     example_with_eid = str(bids.join("sub-1_task-rest_bold.nii.gz"))
     eid = df.experiment_id[df.image_file == example_with_eid].tolist()[0]
     assert eid == 123
