@@ -425,6 +425,8 @@ def run(args) -> pd.DataFrame:
         dict_append(image03_dict, 'slice_number', "")
         dict_append(image03_dict, 'slice_thickness', "")
         dict_append(image03_dict, 'type_of_microscopy', "")
+        # 20250715: warning on not included. resolve by adding
+        dict_append(image03_dict, 'comments_misc', "")
 
     image03_df = pd.DataFrame(image03_dict)
 
