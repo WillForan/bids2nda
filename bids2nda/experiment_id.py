@@ -34,10 +34,12 @@ def read_experiment_lookup(tsv_fname: str) -> pd.DataFrame:
     return df
 
 
-def eid_of_filename(eid_lookup, filename: str) -> ExperimentID:
+def eid_of_filename(eid_lookup: pd.DataFrame, filename: str) -> ExperimentID:
     """
     Try all patterns against filename to find a ExperimentID
     """
+    if eid_lookup is None or isinstance(eid_lookup, str):
+        return ""
     for _, row in eid_lookup.iterrows():
         if row.Pattern.search(filename):
             return row.ExperimentID

@@ -12,7 +12,7 @@ import pandas as pd
 import pytest
 from nibabel.testing import data_path as nibabel_data
 
-import bids2nda.main
+import bids2nda
 from bids2nda.experiment_id import eid_of_filename, read_experiment_lookup
 
 
@@ -80,7 +80,7 @@ def test_full(tmpdir):
         exptsv,
     ]
     with patch.object(sys, "argv", sysargs):
-        bids2nda.main.main()
+        bids2nda.main()
 
     # check output
     # expect task-rest to have exp id 123
