@@ -1,0 +1,13 @@
+name: test
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up environment
+        run: |
+          pip install pytest
+          pip install -e .
+          make test
