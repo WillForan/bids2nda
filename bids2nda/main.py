@@ -394,7 +394,6 @@ def run(args) -> pd.DataFrame:
         # comply with image03 changes from 12/30/19
         # https://nda.nih.gov/data_structure_history.html?short_name=image03
         
-        dict_append(image03_dict, 'deviceserialnumber', "")
         dict_append(image03_dict, 'procdate', "")
         dict_append(image03_dict, 'visnum', "")
         dict_append(image03_dict, 'manifest', "")
@@ -425,8 +424,12 @@ def run(args) -> pd.DataFrame:
         dict_append(image03_dict, 'slice_number', "")
         dict_append(image03_dict, 'slice_thickness', "")
         dict_append(image03_dict, 'type_of_microscopy', "")
-        # 20250715: warning on not included. resolve by adding
+
+        # 20250715: warning on not included. Resolve by adding
+        # DeviceSerialNumber previously always empty. But might be in metadata
+        dict_append(image03_dict, 'deviceserialnumber', metadata.get("DeviceSerialNumber",""))
         dict_append(image03_dict, 'comments_misc', "")
+        dict_append(image03_dict, 'image_thumbnail_file', "")
 
     image03_df = pd.DataFrame(image03_dict)
 
