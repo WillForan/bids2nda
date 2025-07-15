@@ -17,7 +17,7 @@ import numpy as np
 
 
 from .experiment_id import read_experiment_lookup, eid_of_filename
-from .session_info import read_participant_info, read_scan_date
+from .session_info import read_participant_info, read_scan_date, read_session_mapping
 
 
 def get_metadata_for_nifti(bids_root, path):

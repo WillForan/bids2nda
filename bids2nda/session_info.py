@@ -63,6 +63,15 @@ def outer_merge(
     )
     return merged
 
+def read_session_mapping(aux_file: os.PathLike) -> pd.DataFrame:
+    """
+    Read tab separated auxiliary session information mapping file.
+    Must have at least a participant_id column.
+    """
+    df = pd.read_table(aux_file, sep="\t")
+    if not 'participant_id' in df.columns:
+        raise Exception(f"session mapping '{aux_file}' must have a 'participant_id' column")
+    return df
 
 def read_participant_info(
     bids_directory: os.PathLike, aux_df: pd.DataFrame | None = None
