@@ -34,8 +34,8 @@ Data must first be organized in BIDS (see [bids-validator](https://bids-validato
 
 Here is an example directory tree. In addition to BIDS organized `.nii.gz` and `.json` files, you will also need a GUID mapping, participants, and scans file.
 ```
-guid_map.txt # ** GUID_MAPPING file: particiapnt id lookup
-eid_patt.txt # ** ExperimentID ID lookup
+guid_map.txt # ** GUID_MAPPING file: id lookup
+eid_patt.txt # ** optional experiment ID pattern lookup file (vs json sidecar value)
 BIDS/
 ├── participants.tsv # ** Participants File: age, sex
 └── sub-10000
@@ -95,13 +95,21 @@ acq_time	filename
 2000-12-31	func/sub-100000_ses-1_task-rest_bold.nii.gz
 ```
 
-### ExperimentID Pattern File
+### ExperimentID
+NDA uploads `image03` uploads require the `'experiment_id'` column for fMRI (`_bold.nii.gz`) files.
+Experiment IDs are created manually within a collection's experiment tab. See the NDA website's [collection page](https://ndar.nih.gov/user/dashboard/collections.html) and ["create nda experiments" chapter](https://nda.nih.gov/nda/tutorials/nda-experiments?chapter=create-nda-experiments).
 
-The `image03` column `'experiment_id'` is required for fMRI (`_bold.nii.gz`) files.
-This is based on experiment IDs received from NDA after setting the study up through the NDA website [here](https://ndar.nih.gov/user/dashboard/collections.html).
+#### Sidecar
+For `_bold` suffixes, the value stored in the json sidecar with the key `ExperimentID` will be used. That is, `sub-1_task-rest_bold.json` might look like
+```
+{
+ ...
+ "ExperimentID": "1234",
+}
+```
 
-For `_bold` suffixes, the value stored in the json sidecar with the key `ExperimentID` will be used. 
-If you do not want to add it to your sequence sidecars, you can specify IDs based on file name patterns using a dedicated file.
+#### ExperimentID Pattern TSV
+If you do not want to modify existing sidecars, you can specify IDs based on file name patterns using a dedicated file.
 
 ```
 bids2nda ... --experimentid_tsv eid_patt.txt
@@ -113,7 +121,3 @@ where `eid_patt.txt` might look like
 ExperimentID	Pattern
 1234	task-rest
 ```
-
-
-## Example outputs
-See [/examples](/examples)
