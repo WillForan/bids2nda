@@ -9,7 +9,6 @@ from collections import OrderedDict
 from glob import glob
 import os
 import sys
-import re
 
 import nibabel as nb
 import json
@@ -18,52 +17,7 @@ import numpy as np
 
 
 from .experiment_id import read_experiment_lookup, eid_of_filename
-def sub_from_file(path: str) -> str | None:
-    """Quick subj extraction from file path. """
-    if m := re.search(r'sub-([^_/-]*)', path):
-        return m.group(0)
-    return None
-
-
-def read_participant_info(bids_directory: os.PathLike) -> pd.DataFrame:
-    """ Build DataFrame for age and sex
-    Default to values in sessions.tsv
-       but use participants.tsv if not (outer merge).
-    """
-    participants_file = os.path.join(bids_directory, "participants.tsv")
-    participants_df = pd.read_csv(participants_file, header=0, sep="\t")
-
-    sessions_files = glob(os.path.join(bids_directory, "sub-*", "*_sessions.tsv"))
-
-    if len(sessions_files) > 0:
-        sessions_df = pd.concat((pd.read_csv(f, sep="\t").
-                                    assign(participant_id=sub_from_file(f))
-                                 for f in sessions_files), ignore_index=True)
-
-        participants_df = sessions_df.merge(participants_df,
-                                            how='outer',  # use everything
-                                            on='participant_id',
-                                            suffixes=('', '_part'))
-    if 'age' not in participants_df.columns or 'sex' not in participants_df.columns:
-        raise Exception(f"{participants_file} or sub-*/sessions.tsv must have columns 'age' and 'sex' for nda columns 'interview_age' and 'sex'")
-
-    return participants_df
-
-
-def read_scan_date(scans_file: str, file: str) -> str:
-    """Extract acq_time from scan_file.
-    Find row where filename column value matches ``file``"""
-    if not os.path.exists(scans_file):
-        print("%s file not found - information about scan date required by NDA could not be found. Alternatively, information could be stored in sessions.tsv" % scans_file)
-        sys.exit(-1)
-    scans_df = pd.read_csv(scans_file, header=0, sep="\t")
-    if 'filename' not in scans_df.columns or 'acq_time' not in scans_df.columns:
-        raise Exception(f"{scans_file} must have columns 'filename' and 'acq_time' (YYYY-MM-DD) to create 'interview_date' nda column'")
-
-    for (_, row) in scans_df.iterrows():
-        if file.endswith(row["filename"].replace("/", os.sep)):
-            return row.acq_time
-    raise Exception(f"no row where filename={file} in {scans_file}")
+from .session_info import read_participant_info, read_scan_date
 
 
 def get_metadata_for_nifti(bids_root, path):
@@ -207,7 +161,7 @@ def run(args) -> pd.DataFrame:
                   "msec": "Milliseconds",
                   "unknown": "Unknown"}
 
-    participants_df = read_participant_info(args.bids_directory)
+    participants_df = read_participant_info(args.bids_directory, args.session_mapping)
 
     image03_dict = OrderedDict()
     for file in glob(os.path.join(args.bids_directory, "sub-*", "*", "sub-*.nii.gz")) + \
@@ -496,11 +450,18 @@ def parse_args(argv:list[str]|None=None):
         type=str,
         default=None,
         help='Path to TSV file w/cols  ExperimentID and Pattern for NDA EID lookup')
+    parser.add_argument(
+        '--session_mapping',
+        type=str,
+        default=None,
+        help='Path to auxiliary TSV to supplement or replace sessions.tsv/participants.tsv')
 
     args = parser.parse_args(argv)
 
     if args.experimentid_tsv is not None:
         args.experimentid_tsv = read_experiment_lookup(args.experimentid_tsv)
+    if args.session_mapping is not None:
+        args.session_mapping = read_session_mapping(args.session_mapping)
 
     return args
 

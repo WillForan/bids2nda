@@ -1,13 +1,14 @@
 import bids2nda
+from bids2nda.session_info import sub_from_file, read_participant_info, read_scan_date
 
 
 def test_sub_extract():
-    sub = bids2nda.sub_from_file("path/sub-a/ses-b/sub-a_ses-b_thing.blah")
+    sub = sub_from_file("path/sub-a/ses-b/sub-a_ses-b_thing.blah")
     assert sub == "sub-a"
 
 
 def test_read_noses():
-    df = bids2nda.read_participant_info("examples/bids-noses/")
+    df = read_participant_info("examples/bids-noses/")
     assert df.shape[0] == 2
     assert "sex" in df.columns
 
@@ -19,7 +20,7 @@ def test_read_ses():
     ses-1   2015-12-31      20
     ses-2   2025-01-01      39
     """
-    df = bids2nda.read_participant_info("examples/bids-ses/")
+    df = read_participant_info("examples/bids-ses/")
     assert df.shape[0] == 4
     assert "sex" in df.columns
     assert "acq_time" in df.columns
@@ -29,7 +30,7 @@ def test_read_ses():
 
 
 def test_read_scan_date():
-    date = bids2nda.read_scan_date(
+    date = read_scan_date(
         "examples/bids-noses/sub-a/sub-a_scans.tsv",
         "blah/blah/func/sub-a_task-rest_bold.nii.gz",
     )
