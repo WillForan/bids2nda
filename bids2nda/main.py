@@ -497,7 +497,12 @@ def parse_args(argv:list[str]|None=None):
         default=None,
         help='Path to TSV file w/cols  ExperimentID and Pattern for NDA EID lookup')
 
-    return parser.parse_args(argv)
+    args = parser.parse_args(argv)
+
+    if args.experimentid_tsv is not None:
+        args.experimentid_tsv = read_experiment_lookup(args.experimentid_tsv)
+
+    return args
 
 
 def main():

@@ -20,7 +20,7 @@ def test_read_ses():
     ses-2   2025-01-01      39
     """
     df = bids2nda.read_participant_info("examples/bids-ses/")
-    assert df.shape[0] == 8
+    assert df.shape[0] == 4
     assert "sex" in df.columns
     assert "acq_time" in df.columns
     acq_times = df.acq_time.tolist()

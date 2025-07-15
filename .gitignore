@@ -90,3 +90,4 @@ ENV/
 
 # Make test
 .test
+.aider*
