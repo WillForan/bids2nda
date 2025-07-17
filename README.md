@@ -4,11 +4,22 @@ Extract [NIMH Data Archive](https://nda.nih.gov/) compatible metadata from [Brai
 This builds a [`image03.csv`](https://nda.nih.gov/data-structure/image03) data structure for upload with [nda-tools](https://github.com/NDAR/nda-tools) or [web uploader](https://nda.nih.gov/vt/).
 Data must first be organized in BIDS (see [bids-validator](https://bids-validator.readthedocs.io/en/stable/)) and [NDA's Global Unique IDentifiers](https://nda.nih.gov/nda/data-standards#guid) must have already been generated.
 
+## Notable forks and resources
+  * [brown-bnc/bids2nda](https://github.com/brown-bnc/bids2nda) adds `--expid_mapping` and `--lookup_csv`
+  * [WillForan/bids2nda](https://github.com/WillForan/bids2nda)
+  * Behavior and Neuroimaging Core at Brown University [NDA Upload docs (gitbook)](https://docs.ccv.brown.edu/bnc-user-manual/bids/bids-to-nimh-data-archive-nda)
+  * Intermountain Neuroimaging Consortium (INC) at CU Bolder [NDA upload documentation (sphinix)](https://inc-documentation.readthedocs.io/en/dev/nda_uploads.html)
+
 ## Installation
+```
+pip install git@https://github.com/bids-standard/bids2nda
+```
 
+Or using [`uv`](https://docs.astral.sh/uv/)
 
-    pip install https://github.com/INCF/BIDS2NDA/archive/master.zip
-
+```
+uv tool install "bids2nda @ git+https://github.com/WillForan/bids2nda@lncd"
+```
 
 ## Usage
 <!-- python3 -m bids2nda.main -h -->
@@ -29,6 +40,8 @@ Data must first be organized in BIDS (see [bids-validator](https://bids-validato
       -h, --help        Show this help message and exit.
       --experimentid_tsv EXPERIMENTID_TSV
                         Path to TSV file w/cols ExperimentID and Pattern for NDA EID lookup
+      --session_mapping SESSION_MAPPING
+                        Path to auxiliary TSV to supplement or replace sessions.tsv/participants.tsv
 
 ## Prerequisites
 
@@ -49,9 +62,32 @@ BIDS/
         └── sub-10000_ses-1_scans.tsv # ** Scans File: acq_time->interview_date
 ```
 
+Additionally, NDA specific actions are required
+
+  * get assigned collection ID
+  * generate GUIDs  ([guid-tool](https://nda.nih.gov/nda/nda-tools#:~:text=Tool%20Command%20Line-,installers,-File%20Name): `guid-tool -a get -b "$tmpcsv"`)
+  * create fMRI experiment IDs
+
+## Afterward
+
+Upload with [nda-tools](https://github.com/NDAR/nda-tools)'s vtcmd, like
+
+```
+cd nda2bids_output
+vtcmd image03.csv \
+  -c $NDA_CONTAINER_ID \
+  --title "$UPLOAD_TITLE"\
+  --description "$DESC" \
+  --buildPackage \
+  --log-dir logs/ \
+  --verbose \
+  -w -j
+```
+
+## Input File descriptions 
 
 ### GUID_MAPPING file format
-The is the file format produced by the [GUID Tool](https://nda.nih.gov/nda/nda-tools#guid-tool), one line per subject in the format:
+The guid mapping file uses the same format produced by the [GUID Tool](https://nda.nih.gov/nda/nda-tools#guid-tool), one line per subject source sperated by ` - `:
 
 `<participant_id> - <GUID>`
 
@@ -110,6 +146,7 @@ For `_bold` suffixes, the value stored in the json sidecar with the key `Experim
 
 #### ExperimentID Pattern TSV
 If you do not want to modify existing sidecars, you can specify IDs based on file name patterns using a dedicated file.
+This is not in the BIDS standard.
 
 ```
 bids2nda ... --experimentid_tsv eid_patt.txt
@@ -120,4 +157,13 @@ where `eid_patt.txt` might look like
 ```
 ExperimentID	Pattern
 1234	task-rest
+```
+
+### Auxiliary Session mapping
+The BIDS described root level `participant.tsv`, subject level `*_sessions.tsv`, session level `*_scans.tsv`, and json sidecar (`ExperimentID`, `Pho`) can describe all all the information needed for an NDA upload. However, `bids2nda` can also pull this information from a centralized `session map` tab separated file with a line per session. For an example see [`examples/session_map.txt`](examples/session_map.txt).
+
+```
+participant_id	session_id	acq_time	age	sex
+sub-a	ses-1	2005-12-01	20	M
+sub-a	ses-2	2005-01-01	39	M
 ```
