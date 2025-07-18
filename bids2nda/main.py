@@ -278,8 +278,14 @@ def run(args) -> pd.DataFrame:
 
         # Shortcut for the global.const section -- apparently might not be flattened fully
         metadata_const = metadata.get('global', {}).get('const', {})
+
+        # TODO: maybe warn and skip instead of error on unknown suffix
+        scan_type = suffix_to_scan_type.get(suffix)
+        if not scan_type:
+            raise Exception(f"ERROR: unknown scan_type for suffix {suffix} ({file})")
+
         dict_append(image03_dict, 'image_description', description)
-        dict_append(image03_dict, 'scan_type', suffix_to_scan_type[suffix])
+        dict_append(image03_dict, 'scan_type', scan_type)
         dict_append(image03_dict, 'scan_object', "Live")
         dict_append(image03_dict, 'image_file_format', "NIFTI")
         dict_append(image03_dict, 'image_modality', "MRI")
