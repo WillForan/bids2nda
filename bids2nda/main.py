@@ -259,8 +259,8 @@ def run(args) -> pd.DataFrame:
             # but can resort to what's in the file name (_task-)
             task = metadata.get("TaskName")
             if not task:
-                print(f"WARNING: TaskName is not in json side car for {file}")
                 task = metadata.get("task")
+                print(f"WARNING: TaskName is not in json sidecar for {file}. Using filename 'task-': {task}")
             if not task:
                 raise Exception(f"No TaskName metadata nor task-* for bold file '{file}'")
             description = suffix + " " + task
