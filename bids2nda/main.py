@@ -22,7 +22,18 @@ from .session_info import read_participant_info, read_scan_date, read_session_ma
 
 def get_potential_jsons(bids_root: os.PathLike, sidecarJSON: os.PathLike) -> list[os.PathLike]:
     """
-    use a fully specified bids json sidecar path to find all potential jsons with relevant metadata
+    Use a fully specified bids json sidecar path to find all potential jsons with relevant metadata
+    Order of returned files should be in increasing priority and file depth.
+    If e.g. TaskName is different in
+      bids/task-rest_acq-fast_bold.json vs
+      bids/sub-a/ses-1/func/sub-a_ses-1_task-rest_acq-fast_bold.json
+
+    Values in the latter more specific file will be used by py:func:`get_metadata_for_nifti` when the return order is like
+
+         bids/task-rest_acq-fast_bold.json
+         bids/sub-a/sub-a_task-rest_acq-fast_bold.json
+         bids/sub-a/ses-1/sub-a_ses-1_task-rest_acq-fast_bold.json
+         bids/sub-a/ses-1/func/sub-a_ses-1_task-rest_acq-fast_bold.json
     """
     pathComponents = os.path.split(sidecarJSON)
     filenameComponents = pathComponents[-1].split("_")
@@ -33,16 +44,26 @@ def get_potential_jsons(bids_root: os.PathLike, sidecarJSON: os.PathLike) -> lis
     sub = None;
 
     for filenameComponent in filenameComponents:
-        if filenameComponent[:3] != "run":
-            sessionLevelComponentList.append(filenameComponent)
-            if filenameComponent[:3] == "ses":
-                ses = filenameComponent
-            else:
-                subjectLevelComponentList.append(filenameComponent)
-                if filenameComponent[:3] == "sub":
-                    sub = filenameComponent
-                else:
-                    topLevelComponentList.append(filenameComponent)
+        # run isn't used by higher level json files
+        if filenameComponent[:3] == "run":
+            continue
+
+        sessionLevelComponentList.append(filenameComponent)
+        # session shouldn't go into the toplevel list
+        # note session might get set a few times, but should always be the same
+        if filenameComponent[:3] == "ses":
+            ses = filenameComponent
+            continue
+
+        # subj also doesn't go into the top level list
+        # like ses, sub may be set mulitpe times but will always be the same value
+        subjectLevelComponentList.append(filenameComponent)
+        if filenameComponent[:3] == "sub":
+            sub = filenameComponent
+            continue
+
+        # task, acq, echo, etc go into top level
+        topLevelComponentList.append(filenameComponent)
 
     topLevelJSON = os.path.join(bids_root, "_".join(topLevelComponentList))
     potentialJSONs = [topLevelJSON]
@@ -57,14 +78,23 @@ def get_potential_jsons(bids_root: os.PathLike, sidecarJSON: os.PathLike) -> lis
     potentialJSONs.append(sidecarJSON)
     return potentialJSONs
 
-def get_metadata_for_nifti(bids_root, path):
+def get_metadata_for_nifti(bids_root: str, path: str) -> dict:
+    """
+    Find and read all json files that might have relevant metadata for input file.
+    Also pull metadata from filename components.
+    """
 
     #TODO support .nii
     sidecarJSON = path.replace(".nii.gz", ".json")
-    potentialJSONs = get_potential_jsons(bids_root,sidecarJSON)
+    potentialJSONs = get_potential_jsons(bids_root, sidecarJSON)
 
-
-    merged_param_dict = {}
+    # split task-rest_acq-fast_bold into {task:rest, acq:fast}
+    # and let any json parameters overwrite
+    # Note: key 'TaskName' will be from json. 'task' will be from filename
+    merged_param_dict = { kv_arr[0]: kv_arr[1]
+            for kv in os.path.split(sidecarJSON)[-1].split("_")
+            if  len(kv_arr := kv.split("-")) == 2 }
+ 
     for json_file_path in potentialJSONs:
         if os.path.exists(json_file_path):
             param_dict = json.load(open(json_file_path, "r"))

@@ -30,6 +30,22 @@ def test_potential_json_ses():
     ]
 
 
+def test_metadata(tmpdir):
+    funcdir = tmpdir.join("in/sub-a/func")
+    os.makedirs(funcdir)
+    ex_json = os.path.join(
+        os.getcwd(), "examples/bids-noses/sub-a/func/sub-a_task-rest_bold.json"
+    )
+
+    new_json = funcdir.join("sub-a_task-rest_acq-xyz_bold.json")
+    shutil.copyfile(ex_json, new_json)
+
+    metadata = bids2nda.get_metadata_for_nifti(str(tmpdir / "in"), str(new_json))
+    assert metadata.get("TaskName", "rest")  # read from json
+    assert metadata.get("acq", "xyz")  # read from filename
+    assert metadata.get("task", "rest")  # read from filename
+
+
 def test_taskname(tmpdir):
     """
     Task name can be from bids sidecar .json
