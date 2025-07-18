@@ -218,7 +218,15 @@ def run(args) -> pd.DataFrame:
 
         suffix = file.split("_")[-1].split(".")[0]
         if suffix == "bold":
-            description = suffix + " " + metadata["TaskName"]
+            # task name ideally from sidecar ({'TaskName': '...'})
+            # but can resort to what's in the file name (_task-)
+            task = metadata.get("TaskName")
+            if not task:
+                print(f"WARNING: TaskName is not in json side car for {file}")
+                task = metadata.get("task")
+            if not task:
+                raise Exception(f"No TaskName metadata nor task-* for bold file '{file}'")
+            description = suffix + " " + task
             dict_append(image03_dict, 'experiment_id', metadata.get("ExperimentID", ""))
         else:
             description = suffix
@@ -228,6 +236,8 @@ def run(args) -> pd.DataFrame:
         if args.experimentid_tsv is not None and not image03_dict['experiment_id'][-1]:
             if eid := eid_of_filename(args.experimentid_tsv, file):
                 image03_dict['experiment_id'][-1] = eid
+        if suffix == "bold" and not image03_dict['experiment_id'][-1]:
+            print(f"WARNING: no ExperimentID in sidecar for bold file '{file}'. This is likey to cause an error during NDA upload.")
 
         # Shortcut for the global.const section -- apparently might not be flattened fully
         metadata_const = metadata.get('global', {}).get('const', {})
