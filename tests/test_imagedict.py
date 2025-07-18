@@ -5,6 +5,31 @@ import shutil
 import bids2nda
 
 
+def test_potential_json_noses():
+    """where bids metadata could be for a specific sequence without a session label"""
+    noses = bids2nda.get_potential_jsons(
+        "bids", "bids/sub-1/func/sub-1_task-rest_acq-fast_bold.json"
+    )
+    assert noses == [
+        "bids/task-rest_acq-fast_bold.json",
+        "bids/sub-1/sub-1_task-rest_acq-fast_bold.json",
+        "bids/sub-1/func/sub-1_task-rest_acq-fast_bold.json",
+    ]
+
+
+def test_potential_json_ses():
+    """where bids metadata could be for a specific sequence with a session label"""
+    ses = bids2nda.get_potential_jsons(
+        "bids", "bids/sub-a/ses-1/func/sub-a_ses-1_task-rest_acq-fast_bold.json"
+    )
+    assert ses == [
+        "bids/task-rest_acq-fast_bold.json",
+        "bids/sub-a/sub-a_task-rest_acq-fast_bold.json",
+        "bids/sub-a/ses-1/sub-a_ses-1_task-rest_acq-fast_bold.json",
+        "bids/sub-a/ses-1/func/sub-a_ses-1_task-rest_acq-fast_bold.json",
+    ]
+
+
 def test_taskname(tmpdir):
     """
     Task name can be from bids sidecar .json

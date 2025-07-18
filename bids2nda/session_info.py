@@ -89,7 +89,7 @@ def read_participant_info(
     if os.path.isfile(participants_file):
         participants_df = pd.read_csv(participants_file, header=0, sep="\t")
     else:
-        print("WARNING: {participants_file} does not exist.")
+        print(f"WARNING: {participants_file} does not exist.")
         participants_df = pd.DataFrame(columns=["participant_id"])
 
     # higher priority: session values stored in per sub- folder
@@ -125,11 +125,9 @@ def read_scan_date(scans_file: str, file: str) -> str:
     """Extract acq_time from scan_file.
     Find row where filename column value matches ``file``"""
     if not os.path.exists(scans_file):
-        print(
-            "%s file not found - information about scan date required by NDA could not be found. Alternatively, information could be stored in sessions.tsv"
-            % scans_file
-        )
-        sys.exit(-1)
+        raise Exception(
+            f"{scans_file} file not found - information about scan date required by NDA could not be found. Alternatively, information could be stored in sessions.tsv"
+            )
     scans_df = pd.read_csv(scans_file, header=0, sep="\t")
     if "filename" not in scans_df.columns or "acq_time" not in scans_df.columns:
         raise Exception(

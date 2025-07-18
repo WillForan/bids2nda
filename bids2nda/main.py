@@ -20,11 +20,10 @@ from .experiment_id import read_experiment_lookup, eid_of_filename
 from .session_info import read_participant_info, read_scan_date, read_session_mapping
 
 
-def get_metadata_for_nifti(bids_root, path):
-
-    #TODO support .nii
-    sidecarJSON = path.replace(".nii.gz", ".json")
-
+def get_potential_jsons(bids_root: os.PathLike, sidecarJSON: os.PathLike) -> list[os.PathLike]:
+    """
+    use a fully specified bids json sidecar path to find all potential jsons with relevant metadata
+    """
     pathComponents = os.path.split(sidecarJSON)
     filenameComponents = pathComponents[-1].split("_")
     sessionLevelComponentList = []
@@ -56,6 +55,14 @@ def get_metadata_for_nifti(bids_root, path):
         potentialJSONs.append(sessionLevelJSON)
 
     potentialJSONs.append(sidecarJSON)
+    return potentialJSONs
+
+def get_metadata_for_nifti(bids_root, path):
+
+    #TODO support .nii
+    sidecarJSON = path.replace(".nii.gz", ".json")
+    potentialJSONs = get_potential_jsons(bids_root,sidecarJSON)
+
 
     merged_param_dict = {}
     for json_file_path in potentialJSONs:
