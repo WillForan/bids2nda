@@ -9,7 +9,7 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # http://packaging.python.org/en/latest/tutorial.html#version
-    version='0.4.1.20250718',
+    version='0.4.2.20250718',
 
     description="Command line tool generating NDA compatible description from a Brain Imaging Data Structure "
                 "compatible dataset.",
