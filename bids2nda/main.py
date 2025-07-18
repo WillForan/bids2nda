@@ -232,7 +232,7 @@ def run(args) -> pd.DataFrame:
 
         # TODO: should be fatal error?
         if this_subj.shape[0] != 1:
-            print(f"WARNING: {this_subj.shape[0]} matching rows for sub-{sub} (ses={ses}). Check participants.tsv and sessions.tsv for duplicates")
+            print(f"WARNING: {this_subj.shape[0]} matching rows for sub-{sub} (ses={ses}). Check participants.tsv, sessions.tsv, and/or --session_mapping for duplicates")
 
         # only already defined if in sessions.tsv
         # if we have the file, allow it to overwrite sessions.tsv
