@@ -295,7 +295,16 @@ def run(args) -> pd.DataFrame:
         dict_append(image03_dict, 'scanner_software_versions_pd', metadata.get("SoftwareVersions", ""))
         dict_append(image03_dict, 'magnetic_field_strength', metadata.get("MagneticFieldStrength", ""))
         dict_append(image03_dict, 'mri_echo_time_pd', metadata.get("EchoTime", ""))
-        dict_append(image03_dict, 'flip_angle', metadata.get("FlipAngle", ""))
+
+        flip_angle = metadata.get("FlipAngle", "")
+        if not flip_angle:
+            if suffix == "UNIT1":
+                flip_angle = 0
+                print(f"WANRING: flip angle not in json for {file}. Setting to {flip_angle} b/c suffix={suffix}")
+            else:
+                print(f"WARNING: flip angle is not set for {file}")
+        dict_append(image03_dict, 'flip_angle', flip_angle)
+
         dict_append(image03_dict, 'receive_coil', metadata.get("ReceiveCoilName", ""))
         # ImageOrientationPatientDICOM is populated by recent dcm2niix,
         # and ImageOrientationPatient might be provided by exhastive metadata
