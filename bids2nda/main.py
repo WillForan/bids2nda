@@ -346,7 +346,7 @@ def run(args) -> pd.DataFrame:
         # > The minimum sample value is intended to be displayed as black after any VOI gray
         # > scale transformations have been performed.
         photomet = metadata_const.get("PhotometricInterpretation","")
-        if not photomet and suffix in ['dwi','bold','T1w', 'T2w', 'sbref', 'epi']:
+        if not photomet and suffix in ['dwi', 'bold', 'T1w', 'T2w', 'sbref', 'epi', 'UNIT1']:
             photomet = 'MONOCHROME2'
         if not photomet:
             print(f"WARNING: PhotometricInterpretation not in metadata and unknown for {suffix} ({file})")
