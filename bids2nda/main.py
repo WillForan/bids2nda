@@ -168,7 +168,7 @@ def run(args) -> pd.DataFrame:
                            "sbref": "fMRI",
                            #""MR structural(MPRAGE)",
                            "T1w": "MR structural (T1)",
-                           "UNIT1": "MR structural (T1)",
+                           "UNIT1": "MR structural (MP2RAGE)",
                            "PD": "MR structural (PD)",
                            #"MR structural(FSPGR)",
                            "T2w": "MR structural (T2)",
