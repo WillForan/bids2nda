@@ -126,7 +126,7 @@ def read_scan_date(scans_file: str, file: str) -> str:
     Find row where filename column value matches ``file``"""
     if not os.path.exists(scans_file):
         raise Exception(
-            f"{scans_file} file not found - information about scan date required by NDA could not be found. Alternatively, information could be stored in sessions.tsv"
+            f"{scans_file} file not found - 'acq_time' scan date required by NDA could not be found. Alternatively, column can be stored in sessions.tsv"
             )
     scans_df = pd.read_csv(scans_file, header=0, sep="\t")
     if "filename" not in scans_df.columns or "acq_time" not in scans_df.columns:
